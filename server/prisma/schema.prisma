@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Acteurs {
+  id            Int             @id @default(autoincrement())
+  nom           String          @unique @db.VarChar(255)
+  image         String          @db.VarChar(255)
+  age           Int
+  videoActeurs  VideoActeurs[]
+}
+
+model Categories {
+  id     Int      @id @default(autoincrement())
+  nom    String   @db.VarChar(255)
+  videos Videos[]
+}
+
+model VideoActeurs {
+  videoId  Int
+  acteurId Int
+  videos   Videos    @relation(fields: [videoId], references: [id])
+  acteurs  Acteurs   @relation(fields: [acteurId], references: [id])
+
+  @@id([videoId, acteurId])
+}
+
+model Videos {
+  id                      Int                        @id @default(autoincrement())
+  titre                   String                     @unique @db.VarChar(255)
+  description             String                     @db.VarChar(255)
+  duree                   String                     @db.VarChar(100)
+  dateDePublication       DateTime                   @db.DateTime
+  categorieId             Int
+  studioId                Int
+  image                   String                     @db.VarChar(255)
+  videoUrl                String                     @db.VarChar(1024)
+  qualite                 String                     @db.VarChar(50)
+  commentaires            Commentaires[]
+  favoris                 Favoris[]
+  historiquesDeVisionnage HistoriquesDeVisionnage[]
+  videoActeurs            VideoActeurs[]
+  categories              Categories?                @relation(fields: [categorieId], references: [id])
+  studios                 Studios?                   @relation(fields: [studioId], references: [id])
+  tags                    Tags[]                     
+  playlists               Playlists[]                @relation("VideoToPlaylist")
+}
+
+
+model Commentaires {
+  id                  Int      @id @default(autoincrement())
+  userId              Int
+  videoId             Int
+  texte               String   @db.VarChar(255)
+  note                Int
+  dateDePublication   DateTime @db.DateTime
+  users               Users    @relation(fields: [userId], references: [id])
+  videos              Videos   @relation(fields: [videoId], references: [id])
+}
+
+model Favoris {
+  userId    Int
+  videoId   Int
+  users     Users    @relation(fields: [userId], references: [id])
+  videos    Videos   @relation(fields: [videoId], references: [id])
+
+  @@id([userId, videoId])
+}
+
+model HistoriquesDeVisionnage {
+  userId          Int
+  videoId         Int
+  heureDeDebut    DateTime @db.Timestamp(0)
+  heureDeFin      DateTime @db.Timestamp(0)
+  users           Users    @relation(fields: [userId], references: [id])
+  videos          Videos   @relation(fields: [videoId], references: [id])
+
+  @@id([userId, videoId])
+}
+
+
+
+model Statistiques {
+  date              DateTime @id
+  visiteurs         Int
+  videosVisionnees  Int
+}
+
+model Studios {
+  id      Int      @id @default(autoincrement())
+  nom     String   @db.VarChar(255) @default("Nom Temporaire")
+  image   String   @db.VarChar(255)
+  videos  Videos[]
+}
+model Users {
+  id                        Int                         @id @default(autoincrement())
+  pseudo                    String                      @unique @db.VarChar(255)
+  email                     String                      @db.VarChar(255)
+  password                  String                      @db.VarChar(255)
+  image                     String                      @db.VarChar(255)
+  dateNaissance             DateTime                    @db.DateTime
+  role                      UsersRole                   @default(CLIENT)
+  commentaires              Commentaires[]
+  favoris                   Favoris[]
+  historiquesDeVisionnage   HistoriquesDeVisionnage[]
+  playlists                 Playlists[]                // Relation existante avec le modèle Playlists
+}
+
+enum UsersRole {
+  ADMIN
+  GESTIONNAIRE
+  CLIENT
+}
+
+model Playlists {
+  id          Int      @id @default(autoincrement())
+  titre       String   @db.VarChar(255)
+  description String   @db.VarChar(255)
+  videos      Videos[] @relation("VideoToPlaylist")
+  userId      Int      
+  users       Users    @relation(fields: [userId], references: [id])
+}
+
+model Tags {
+  id        Int      @id @default(autoincrement())
+  libelle   String   @db.VarChar(255)
+  videos    Videos[] 
+}
