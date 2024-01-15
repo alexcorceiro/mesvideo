@@ -4,6 +4,10 @@ const admin = require("../config/firebaseAdmin");
 const bucket = admin.storage().bucket('gs://voltstream-32617.appspot.com')
 const { getVideoMetadonner, generateThumbnail } = require("../utils/metaVideo");
 const { uploadToFirebase } = require("../utils/uplaodvideo")
+const fs = require('fs');
+const util = require('util');
+const unlinkAsync = util.promisify(fs.unlink);
+const path = require('path');
 
 exports.createVideo = async (req, res) => {
     const { titre, description, categorieId, studioId} = req.body;
@@ -53,8 +57,11 @@ exports.createVideo = async (req, res) => {
           image:thumbnailUrl,
       }});
   
-      // Répondez avec succès
-      res.status(200).json({ message: "Vidéo créée avec succès", video: newVideo });
+        // Réussite de la création, maintenant supprimez les fichiers temporaires
+    // const thumbnailPaths = path.join(__dirname, 'miniatures', 'thumbnail_<IDENTIFIANT>.png'); // Remplacez <IDENTIFIANT> par le nom réel du fichier
+    // await unlinkAsync(thumbnailPaths);
+
+    res.status(200).json({ message: "Vidéo créée avec succès", video: newVideo });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: err.message });
